@@ -1,0 +1,7 @@
+﻿Id: Flashpoint_05c6d99c-c8ad-49c5-939a-9010f0d585fb
+Name: Custom Library Importer
+Author: John Doe
+Version: 1.0
+Module: Flashpoint.dll
+Type: GameLibrary
+Icon: icon.png
