@@ -10,16 +10,13 @@ namespace Flashpoint
 {
     public class FlashpointSettings : ObservableObject
     {
-        private string option1 = string.Empty;
-        private bool option2 = false;
-        private bool optionThatWontBeSaved = false;
+        private string installDirectory = "C:\\Flashpoint";
+        private string collectionName = string.Empty;
+        public string collectionFilename = null;
 
-        public string Option1 { get => option1; set => SetValue(ref option1, value); }
-        public bool Option2 { get => option2; set => SetValue(ref option2, value); }
-        // Playnite serializes settings object to a JSON object and saves it as text file.
-        // If you want to exclude some property from being saved then use `JsonDontSerialize` ignore attribute.
-        [DontSerialize]
-        public bool OptionThatWontBeSaved { get => optionThatWontBeSaved; set => SetValue(ref optionThatWontBeSaved, value); }
+        public string InstallDirectory { get => installDirectory; set => SetValue(ref installDirectory, value); }
+        public string CollectionName { get => collectionName; set => SetValue(ref collectionName, value); }
+        public string CollectionFilename { get => collectionFilename; set => SetValue(ref collectionFilename, value); }
     }
 
     public class FlashpointSettingsViewModel : ObservableObject, ISettings
@@ -66,14 +63,14 @@ namespace Flashpoint
         public void CancelEdit()
         {
             // Code executed when user decides to cancel any changes made since BeginEdit was called.
-            // This method should revert any changes made to Option1 and Option2.
+            // This method should revert any changes made to InstallDirectory.
             Settings = editingClone;
         }
 
         public void EndEdit()
         {
             // Code executed when user decides to confirm changes made since BeginEdit was called.
-            // This method should save settings made to Option1 and Option2.
+            // This method should save settings made to InstallDirectory.
             plugin.SavePluginSettings(Settings);
         }
 
@@ -82,8 +79,56 @@ namespace Flashpoint
             // Code execute when user decides to confirm changes made since BeginEdit was called.
             // Executed before EndEdit is called and EndEdit is not called if false is returned.
             // List of errors is presented to user if verification fails.
+
+
+            // Verify that the install directory exists and is valid
             errors = new List<string>();
-            return true;
+
+            if (!System.IO.Directory.Exists(settings.InstallDirectory))
+            {
+                errors.Add("The specified install directory does not exist.");
+            }
+
+
+            if (editingClone.CollectionName != settings.CollectionName)
+            {
+                if (settings.CollectionName != null && settings.CollectionName.Length > 0)
+                {
+                    string filename = null;
+
+                    // Get all the playlist files in the Playlists directory
+                    var playlistsDir = System.IO.Path.Combine(settings.InstallDirectory, "Data", "Playlists");
+                    var playlistFiles = System.IO.Directory.GetFiles(playlistsDir, "*.json");
+
+                    // For each file, open and check if the name matches the CollectionName
+                    foreach (var file in playlistFiles)
+                    {
+                        var content = System.IO.File.ReadAllText(file);
+                        dynamic playlist = Newtonsoft.Json.JsonConvert.DeserializeObject(content);
+                        if (playlist.title == settings.CollectionName)
+                        {
+                            filename = System.IO.Path.GetFileName(file);
+                            break;
+                        }
+                    }
+
+                    if (filename != null)
+                    {
+                        settings.collectionFilename = filename;
+                    }
+                    else
+                    {
+                        errors.Add("The specified collection name does not exist in the Flashpoint installation.");
+                    }
+                }
+                else
+                {
+                    settings.collectionFilename = null;
+                }
+
+            }
+
+            return errors.Count == 0;
         }
     }
 }
