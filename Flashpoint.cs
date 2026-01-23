@@ -96,7 +96,7 @@ namespace Flashpoint
                     string query = "SELECT id,title,version,originalDescription,lastPlayed,playtime,playCounter,logoPath,screenshotPath FROM game WHERE id = ?";
                          
 
-                    var result = database.Query<FlashpointGame>(query, gameId).First();
+                    var result = database.Query<FlashpointGame>(query, gameId);
                     //logger.Info("ASUID");
                     //logger.Info(gameId);
                     //logger.Info(result.id);
