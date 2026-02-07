@@ -6,6 +6,7 @@ using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using static System.Net.Mime.MediaTypeNames;
@@ -15,6 +16,7 @@ namespace Flashpoint
     public class Flashpoint : LibraryPlugin
     {
         private static readonly ILogger logger = LogManager.GetLogger();
+        public static string GAMEID_PREFIX = "flashpoint-";
 
         private FlashpointSettingsViewModel settings { get; set; }
 
@@ -128,7 +130,7 @@ namespace Flashpoint
                     var game = new GameMetadata
                     {
                         Name = result.title,
-                        GameId = "flashpoint-" + gameId,
+                        GameId = GAMEID_PREFIX + gameId,
                         Description = gameIdsAndNotes[gameId],
                         IsInstalled = true,
                         BackgroundImage = new MetadataFile(screenshotPath),
@@ -166,5 +168,32 @@ namespace Flashpoint
         {
             return new FlashpointSettingsView();
         }
+
+        public override IEnumerable<PlayController> GetPlayActions(GetPlayActionsArgs args)
+        {
+            logger.Info($"Starting {args.Game.Name} via Flashpoint");
+
+
+            // Extract the Game UUID. The Guid.Parse will ensure that the format is right (to prevent hacky behavior)
+            // Should that be a concern for this project? Heck if I know! But why the heck not, am I right?
+            var game_id = Guid.Parse(args.Game.GameId.Substring(GAMEID_PREFIX.Length));
+
+            logger.Info("GameID: " + game_id);
+
+
+            var flashpoint_directory = settings.Settings.InstallDirectory;
+            var CLIFp_path = System.IO.Path.Combine(flashpoint_directory, "CLIFp", "bin", "clifp-c.exe");
+
+            // Verify that CLIFp exists
+            if (!System.IO.File.Exists(CLIFp_path))
+            {
+                logger.Error("CLIFp executable not found at: " + CLIFp_path);
+                PlayniteApi.Dialogs.ShowErrorMessage($"Couldn't find the CLIFp executable at: `{CLIFp_path}`. Please make sure you install it!", "Couldn't launch game");
+                yield break;
+            }
+
+            yield return new ClifpPlayController(args.Game, CLIFp_path);
+        }
+
     }
 }

@@ -10,11 +10,12 @@ namespace Flashpoint
 {
     public class FlashpointSettings : ObservableObject
     {
-        private string installDirectory = "C:\\Flashpoint";
+        private const string DEFAULT_INSTALL_DIRECTORY = "C:\\Flashpoint";
+        private string installDirectory = DEFAULT_INSTALL_DIRECTORY;
         private string collectionName = string.Empty;
         public string collectionFilename = null;
 
-        public string InstallDirectory { get => installDirectory; set => SetValue(ref installDirectory, value); }
+        public string InstallDirectory { get => installDirectory ?? DEFAULT_INSTALL_DIRECTORY; set => SetValue(ref installDirectory, value); }
         public string CollectionName { get => collectionName; set => SetValue(ref collectionName, value); }
         public string CollectionFilename { get => collectionFilename; set => SetValue(ref collectionFilename, value); }
     }
