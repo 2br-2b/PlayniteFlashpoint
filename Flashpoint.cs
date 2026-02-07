@@ -143,7 +143,7 @@ namespace Flashpoint
 
                     if(args.CancelToken.IsCancellationRequested)
                     {
-                        return new List<GameMetadata>();
+                        return games;
                     }
                 }
             }
